@@ -25,9 +25,9 @@
         </Window.Resources>
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom" Height="24">
-            <StatusBarItem Name="hohho" Content="" Width="130"/>
+            <StatusBarItem Name="sttAngle" Content="" Width="130"/>
             <Separator/>
-            <StatusBarItem Name="fuffu" Content="" Width="130"/>
+            <StatusBarItem Name="sttCoordinate" Content="" Width="130"/>
             <Separator/>
             <StatusBarItem Name="sttCurrentStatus"/>
         </StatusBar>
@@ -65,9 +65,9 @@
                 <ComboBox Name="cmbInterpolationTarget" Margin="3" Width="58"
                             ItemsSource="{Binding Source={StaticResource InterpolationMode}}" SelectedValue="{Binding InterpolationMode}"
                             SelectedIndex="0"/>
-                <tookit:DecimalUpDown Margin="3" Width="58" Value="{Binding InterpolationBegin}"/>
+                <tookit:DecimalUpDown Name="dudInterpolationBegin" Margin="3" Width="58" Value="{Binding InterpolationBegin}"/>
                 <Label Content="~"/>
-                <tookit:DecimalUpDown Margin="3" Width="58" Value="{Binding InterpolationEnd}"/>
+                <tookit:DecimalUpDown Name="dudInterpolationEnd" Margin="3" Width="58" Value="{Binding InterpolationEnd}"/>
                 <Button Name="btnInterpolationNearest" Content="Nearest" Margin="3" Width="58"
                         Click="btnInterpolationNearest_Click"/>
                 <Button Name="btnInterpolationCCW" Content="CCW" Margin="3" Width="34" Visibility="{Binding IsGazeInterpolation}"

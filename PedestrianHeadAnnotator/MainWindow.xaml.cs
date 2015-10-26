@@ -54,12 +54,11 @@ namespace PedestrianHeadAnnotator
             var files = System.IO.Directory.GetFiles(txtBoxInputImageDirectory.Text).ToList();
             if (vm.DetectedHead.Frames.Count < files.Where(IsImage).Count())
             {
-                int i = vm.DetectedHead.Frames.Count;
-                vm.DetectedHead.Frames.AddRange(new DetectedHead.Frame[files.Count - vm.DetectedHead.Frames.Count]);
-                for (; i < vm.DetectedHead.Frames.Count; i++)
-                    vm.DetectedHead.Frames[i] = new DetectedHead.Frame() { Number = i };
-                dudFrameNumber.Minimum = vm.DetectedHead.Frames.Min(f => f.Number);
-                dudFrameNumber.Maximum = vm.DetectedHead.Frames.Max(f => f.Number);
+                vm.DetectedHead.Frames.AddRange(
+                    new DetectedHead.Frame[files.Count - vm.DetectedHead.Frames.Count]
+                    .Select((f,i)=> { f = new DetectedHead.Frame() { Number = i }; return f; }));
+                dudFrameNumber.Minimum = dudInterpolationBegin.Minimum = dudInterpolationEnd.Minimum = vm.DetectedHead.Frames.Min(f => f.Number);
+                dudFrameNumber.Maximum = dudInterpolationBegin.Maximum = dudInterpolationEnd.Maximum = vm.DetectedHead.Frames.Max(f => f.Number);
             }
             dudFrameNumber.Value = files.IndexOf(filename);
             lastModifiedFrame = (int)dudFrameNumber.Value;
@@ -212,13 +211,21 @@ namespace PedestrianHeadAnnotator
         {
             int beginFrame = vm.InterpolationBegin;
             int endFrame = vm.InterpolationEnd;
-            double from = vm.DetectedHead.Frames[beginFrame].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze;
-            double to = vm.DetectedHead.Frames[endFrame].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze;
+            double? from = vm.DetectedHead.Frames.FirstOrDefault(i=>i.Number==beginFrame)?
+                .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex)?.Body.Head.Gaze;
+            double? to = vm.DetectedHead.Frames.FirstOrDefault(i=>i.Number==endFrame)?
+                .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex)?.Body.Head.Gaze;
+            if (from == null) MessageBox.Show("指定した開始フレームにアノテーションがありませんでした");
+            if (to == null) MessageBox.Show("指定した終了フレームにアノテーションがありませんでした");
+            if (from == null || to == null) return;
+
             for (int fNumber = beginFrame + 1; fNumber < endFrame; fNumber++)
             {
                 double rate = (double)(fNumber - beginFrame) / (endFrame - beginFrame);
-                vm.DetectedHead.Frames[fNumber].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze
-                    = (int)InterpolationCounterClockwise(from, to, rate);
+                var obj = vm.DetectedHead.Frames.FirstOrDefault(i=>i.Number==fNumber)?
+                    .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex);
+                if (obj != null) { obj.Body.Head.Gaze = (int)InterpolationCounterClockwise((double)from, (double)to, rate); }
+                else {/* todo: objがないときの処理をどうするか */}
             }
         }
 
@@ -226,13 +233,20 @@ namespace PedestrianHeadAnnotator
         {
             int beginFrame = vm.InterpolationBegin;
             int endFrame = vm.InterpolationEnd;
-            double from = vm.DetectedHead.Frames[beginFrame].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze;
-            double to = vm.DetectedHead.Frames[endFrame].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze;
+            double? from = vm.DetectedHead.Frames.FirstOrDefault(i => i.Number == beginFrame)?
+                .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex)?.Body.Head.Gaze;
+            double? to = vm.DetectedHead.Frames.FirstOrDefault(i => i.Number == endFrame)?
+                .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex)?.Body.Head.Gaze;
+            if (from == null) MessageBox.Show("指定した開始フレームにアノテーションがありませんでした");
+            if (to == null) MessageBox.Show("指定した終了フレームにアノテーションがありませんでした");
+            if (from == null || to == null) return;
             for (int fNumber = beginFrame + 1; fNumber < endFrame; fNumber++)
             {
                 double rate = (double)(fNumber - beginFrame) / (endFrame - beginFrame);
-                vm.DetectedHead.Frames[fNumber].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze
-                    = (int)InterpolationClockwise(from, to, rate);
+                var obj = vm.DetectedHead.Frames.FirstOrDefault(i=>i.Number==fNumber)?
+                    .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex);
+                if (obj != null) { obj.Body.Head.Gaze = (int)InterpolationClockwise((double)from, (double)to, rate); }
+                else { /* todo: objがないときの処理をどうするか */}
             }
         }
         
@@ -240,9 +254,15 @@ namespace PedestrianHeadAnnotator
         {
             int beginFrame = vm.InterpolationBegin;
             int endFrame = vm.InterpolationEnd;
-            double from = vm.DetectedHead.Frames[beginFrame].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze;
-            double to = vm.DetectedHead.Frames[endFrame].ObjectList.Objects[cmbPersonID.SelectedIndex].Body.Head.Gaze;
-            double diff = to - from;
+            double? from = vm.DetectedHead.Frames.FirstOrDefault(i => i.Number == beginFrame)?
+                .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex)?.Body.Head.Gaze;
+            double? to = vm.DetectedHead.Frames.FirstOrDefault(i => i.Number == endFrame)?
+                .ObjectList.Objects.FirstOrDefault(i => i.Id == cmbPersonID.SelectedIndex)?.Body.Head.Gaze;
+            if (from == null) MessageBox.Show("指定した開始フレームにアノテーションがありませんでした");
+            if (to == null) MessageBox.Show("指定した終了フレームにアノテーションがありませんでした");
+            if (from == null || to == null) return;
+
+            double diff = (double)to - (double)from;
             if (diff < -180 || (0 < diff && diff < 180)) btnInterpolationCCW_Click(sender, e);
             else btnInterpolationCW_Click(sender, e);
         }
@@ -295,13 +315,19 @@ namespace PedestrianHeadAnnotator
             {
                 Point pt = Mouse.GetPosition(canvas);
                 var line = sender as Line;
-                fuffu.Content = pt.X.ToString("0.000") + "," + pt.Y.ToString("0.000");
-                var obj = vm.DetectedHead.Frames[(int)dudFrameNumber.Value].ObjectList.Objects[(int)line.Tag];
+                sttCoordinate.Content = pt.X.ToString("0.000") + "," + pt.Y.ToString("0.000");
+                var obj = vm.DetectedHead.Frames.FirstOrDefault(i=>i.Number==(int)dudFrameNumber.Value)?
+                    .ObjectList.Objects.FirstOrDefault(i=>i.Id==(int)line.Tag);
+                if (obj == null)
+                {
+                    sttCurrentStatus.Content = "error 1: 不明のエラーが発生し，只今のアノテーションを中止しました";
+                    return;
+                }
                 double gazeRad = Math.Atan2(-(pt.Y-obj.Body.Head.YCenter), pt.X-obj.Body.Head.XCenter); if (gazeRad < 0) gazeRad += Math.PI * 2;
                 double gazeDeg = (gazeRad * 180 / Math.PI);
                 int fNumber = (int)dudFrameNumber.Value;
-                vm.DetectedHead.Frames[(int)dudFrameNumber.Value].ObjectList.Objects[(int)line.Tag].Body.Head.Gaze = (int)gazeDeg;
-                hohho.Content = gazeDeg.ToString("0.000");
+                obj.Body.Head.Gaze = (int)gazeDeg;
+                sttAngle.Content = gazeDeg.ToString("0.000");
                 line.X1 = obj.Body.Head.XCenter + Math.Cos(gazeRad) * obj.Body.Head.Size * 0.5;
                 line.Y1 = obj.Body.Head.YCenter - Math.Sin(gazeRad) * obj.Body.Head.Size * 0.5;
                 line.X2 = obj.Body.Head.XCenter + Math.Cos(gazeRad) * obj.Body.Head.Size * 2;
