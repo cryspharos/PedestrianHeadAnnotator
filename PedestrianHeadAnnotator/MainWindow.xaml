@@ -1,0 +1,88 @@
+﻿<Window x:Class="PedestrianHeadAnnotator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:local="clr-namespace:PedestrianHeadAnnotator"
+        xmlns:tookit="http://schemas.xceed.com/wpf/xaml/toolkit"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="420" Width="680">
+    <Window.Resources>
+        <LinearGradientBrush x:Key="MyLGB" StartPoint="0.5,0" EndPoint="0.5,1">
+            <GradientStop Color="#f0f0f0"/>
+            <GradientStop Color="#e0e0e0" Offset="1"/>
+        </LinearGradientBrush>
+        <Style TargetType="Grid" x:Key="MyGrid">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Grid.Background" Value="{StaticResource MyLGB}"/>
+        </Style>
+        <ObjectDataProvider x:Key="InterpolationMode" MethodName="GetValues" ObjectType="{x:Type sys:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:InterpolationMode" />
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+        </Window.Resources>
+    <DockPanel>
+        <StatusBar DockPanel.Dock="Bottom" Height="24">
+            <StatusBarItem Name="hohho" Content="" Width="130"/>
+            <Separator/>
+            <StatusBarItem Name="fuffu" Content="" Width="130"/>
+            <Separator/>
+            <StatusBarItem Name="sttCurrentStatus"/>
+        </StatusBar>
+        <Grid DockPanel.Dock="Top" Style="{StaticResource MyGrid}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="112"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="64"/>
+            </Grid.ColumnDefinitions>
+            <Label Content="Image Directory:"/>
+            <TextBox Name="txtBoxInputImageDirectory" Grid.Column="1" Margin="3" IsReadOnly="True"/>
+            <Button Name="btnInputImageDirectory" Content="Browse..." Grid.Column="2" Margin="3" Click="btnInputImageDirectory_Click"/>
+        </Grid>
+        <Grid DockPanel.Dock="Top" Style="{StaticResource MyGrid}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="64"/>
+                <ColumnDefinition Width="64"/>
+            </Grid.ColumnDefinitions>
+            <Label HorizontalAlignment="Right" Content="Annotation:"/>
+            <Button Name="btnLoadAnnotation" Content="Load..." Grid.Column="1" Margin="3" Click="btnLoadAnnotation_Click"/>
+            <Button Name="btnSaveAnnotation" Content="Save..." Grid.Column="2" Margin="3"
+                    IsEnabled="{Binding Ready}"
+                    Click="btnSaveAnnotation_Click"/>
+        </Grid>
+        <Grid DockPanel.Dock="Top" Style="{StaticResource MyGrid}">
+            <StackPanel Orientation="Horizontal" IsEnabled="{Binding Ready}">
+                <Label Content="ID:"/>
+                <ComboBox Name="cmbPersonID" Margin="3" Width="58"
+                          SelectionChanged="cmbPersonID_SelectionChanged"/>
+                <Label Content="Frame:"/>
+                <tookit:DecimalUpDown Name="dudFrameNumber" Margin="3" Width="58"
+                                      ValueChanged="dudFrameNumber_ValueChanged"/>
+                <Label Content="Interpolation:"/>
+                <ComboBox Name="cmbInterpolationTarget" Margin="3" Width="58"
+                            ItemsSource="{Binding Source={StaticResource InterpolationMode}}" SelectedValue="{Binding InterpolationMode}"
+                            SelectedIndex="0"/>
+                <tookit:DecimalUpDown Margin="3" Width="58" Value="{Binding InterpolationBegin}"/>
+                <Label Content="~"/>
+                <tookit:DecimalUpDown Margin="3" Width="58" Value="{Binding InterpolationEnd}"/>
+                <Button Name="btnInterpolationNearest" Content="Nearest" Margin="3" Width="58"
+                        Click="btnInterpolationNearest_Click"/>
+                <Button Name="btnInterpolationCCW" Content="CCW" Margin="3" Width="34" Visibility="{Binding IsGazeInterpolation}"
+                        Click="btnInterpolationCCW_Click"/>
+                <Button Name="btnInterpolationCW" Content="CW" Margin="3" Width="34" Visibility="{Binding IsGazeInterpolation}"
+                        Click="btnInterpolationCW_Click"/>
+            </StackPanel>
+        </Grid>
+        <Grid>
+            <Viewbox>
+                <Grid>
+                    <Image Name="img"/>
+                    <Canvas Name="canvas" ClipToBounds="True"/>
+                </Grid>
+            </Viewbox>
+        </Grid>
+    </DockPanel>
+</Window>
